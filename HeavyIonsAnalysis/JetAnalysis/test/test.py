@@ -36,7 +36,7 @@ process.source = cms.Source("PoolSource",
 
 # Number of events we want to process, -1 = all events
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10000)
+    input = cms.untracked.int32(100)
     )
 
 ###############################################################################
@@ -48,6 +48,9 @@ process.load('Configuration.Geometry.GeometryDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('FWCore.MessageService.MessageLogger_cfi')
+
+process.SimpleMemoryCheck = cms.Service("SimpleMemoryCheck")
+process.Timing = cms.Service("Timing")
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '103X_dataRun2_Prompt_v2', '')
@@ -185,7 +188,7 @@ process.load('RecoHI.ZDCRecHit.QWZDC2018RecHit_cfi')
 process.load('HeavyIonsAnalysis.JetAnalysis.rechitanalyzer_cfi')
 process.rechitanalyzerpp.doZDCRecHit = True
 process.rechitanalyzerpp.zdcRecHitSrc = cms.InputTag("QWzdcreco")
-process.pfTowerspp.doHF = True
+process.pfTowerspp.doHF = False
 
 process.rechitanalyzerpp.doHF=True
 process.rechitanalyzerpp.hcalHFRecHitSrc = cms.InputTag("reducedHcalRecHits","hfreco")
@@ -214,7 +217,8 @@ process.jetSequence_reduced = cms.Sequence(
     process.rhoSequence +
     process.highPurityTracks +
     process.akPu4PFJets +
-    process.akPu4PFJetSequence 
+    process.akPu4PFJetSequence +
+    process.akFlowPuCs4PFJetSequence
 )
 
 process.ana_step = cms.Path(
@@ -227,6 +231,7 @@ process.ana_step = cms.Path(
     process.centralityBin +
     process.hiEvtAnalyzer +
     process.jetSequence_reduced +
+    #process.jetSequence +
     #process.hiPuRhoR3Analyzer + 
     process.correctedElectrons +
     process.ggHiNtuplizer +
@@ -312,11 +317,11 @@ if cleanJets == True:
 ###############################################################################
 
 # no screen text output
-process.MessageLogger = cms.Service("MessageLogger",
-                          destinations = cms.untracked.vstring('detailedInfo'),
-                          categories = cms.untracked.vstring('eventNumber'),
-                          detailedInfo = cms.untracked.PSet(eventNumber = cms.untracked.PSet(reportEvery = cms.untracked.int32(1000))),
-                          )
+#process.MessageLogger = cms.Service("MessageLogger",
+#                          destinations = cms.untracked.vstring('detailedInfo'),
+#                          categories = cms.untracked.vstring('eventNumber'),
+#                          detailedInfo = cms.untracked.PSet(eventNumber = cms.untracked.PSet(reportEvery = cms.untracked.int32(1000))),
+#                          )
 process.options.numberOfThreads=cms.untracked.uint32(8)
 process.options.numberOfStreams=cms.untracked.uint32(0)
 

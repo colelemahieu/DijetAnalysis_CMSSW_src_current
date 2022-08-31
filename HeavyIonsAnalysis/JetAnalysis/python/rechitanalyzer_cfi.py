@@ -53,7 +53,7 @@ pfTowers = rechitanalyzer.clone(
 rechitanalyzerpp = rechitanalyzer.clone(
     doHF = cms.bool(False),
     vtxSrc = cms.InputTag("offlinePrimaryVerticesWithBS"),
-    JetSrc = cms.InputTag("ak4CaloJets"),
+    JetSrc = cms.InputTag("ak4PFJets"),
     )
 
 pfTowerspp = pfTowers.clone(

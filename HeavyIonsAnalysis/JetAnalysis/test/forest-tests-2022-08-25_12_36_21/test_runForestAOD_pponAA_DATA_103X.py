@@ -7,7 +7,6 @@ cleanJets = True
 
 import FWCore.ParameterSet.Config as cms
 process = cms.Process('HiForest')
-process.options = cms.untracked.PSet(SkipEvent = cms.untracked.vstring('ProductNotFound'))
 
 ###############################################################################
 # HiForest labelling info
@@ -28,15 +27,12 @@ process.HiForest.HiForestVersion = cms.string(version)
 
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
-    fileNames = cms.untracked.vstring(
-        #"file:/afs/cern.ch/work/r/rbi/public/forest/HIHardProbes_HIRun2018A-PromptReco-v2_AOD.root"
-        "/store/hidata/HIRun2018A/HIForward/AOD/04Apr2019-v1/50005/8DBBBB66-2713-2742-A217-954ED493456D.root"
-),
+fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/c/clemahie/Jets2/CMSSW_10_3_3_patch1/src/HeavyIonsAnalysis/JetAnalysis/test/forest-tests-2022-08-25_12_36_21/samples/HIHardProbes_HIRun2018A-PromptReco-v2_1031p1_AOD.root'),
     )
 
 # Number of events we want to process, -1 = all events
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10000)
+    input = cms.untracked.int32(1)
     )
 
 ###############################################################################
@@ -80,7 +76,7 @@ process.GlobalTag.toGet.extend([
 ###############################################################################
 
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string("HiForestAOD.root"))
+    fileName = cms.string("runForestAOD_pponAA_DATA_103X.root"))
 
 ###############################################################################
 # Additional Reconstruction and Analysis: Main Body
@@ -114,17 +110,7 @@ from HeavyIonsAnalysis.EventAnalysis.hltobject_cfi import trigger_list_data
 process.hltobject.triggerNames = trigger_list_data
 
 ###############################################################################
-process.triggerSelection = cms.EDFilter( "TriggerResultsFilter",
-    triggerConditions = cms.vstring(
-     'HLT_HIZeroBiasPixel_SingleTrack_v1',
-     'HLT_HIZeroBias_v1' ),
-    hltResults = cms.InputTag( "TriggerResults", "", "HLT" ),
-    l1tResults = cms.InputTag( "gtDigis" ),
-    l1tIgnoreMask = cms.bool( False ),
-    l1techIgnorePrescales = cms.bool( False ),
-    daqPartitions = cms.uint32( 1 ),
-    throw = cms.bool( True )
-)
+
 #########################
 # Track Analyzer
 #########################
@@ -185,15 +171,8 @@ process.load('RecoHI.ZDCRecHit.QWZDC2018RecHit_cfi')
 process.load('HeavyIonsAnalysis.JetAnalysis.rechitanalyzer_cfi')
 process.rechitanalyzerpp.doZDCRecHit = True
 process.rechitanalyzerpp.zdcRecHitSrc = cms.InputTag("QWzdcreco")
-process.pfTowerspp.doHF = True
+process.pfTowerspp.doHF = False
 
-process.rechitanalyzerpp.doHF=True
-process.rechitanalyzerpp.hcalHFRecHitSrc = cms.InputTag("reducedHcalRecHits","hfreco")
-process.rechitanalyzerpp.doHBHE=True
-process.rechitanalyzerpp.hcalHBHERecHitSrc = cms.InputTag("reducedHcalRecHits","hbhereco")
-process.rechitanalyzerpp.doEcal=True
-process.rechitanalyzerpp.EBRecHitSrc = cms.InputTag("reducedEcalRecHitsEB")
-process.rechitanalyzerpp.EERecHitSrc = cms.InputTag("reducedEcalRecHitsEE")
 ###############################################################################
 #Recover peripheral primary vertices
 #https://twiki.cern.ch/twiki/bin/view/CMS/HITracking2018PbPb#Peripheral%20Vertex%20Recovery
@@ -210,32 +189,24 @@ if cleanJets:
 # Main analysis list
 #########################
 
-process.jetSequence_reduced = cms.Sequence(
-    process.rhoSequence +
-    process.highPurityTracks +
-    process.akPu4PFJets +
-    process.akPu4PFJetSequence 
-)
-
 process.ana_step = cms.Path(
     process.offlinePrimaryVerticesRecovery +
     process.HiForest +
     process.hltanalysis +
-    #process.hltobject +
+    process.hltobject +
     #process.l1object +
-    #process.triggerSelection *
     process.centralityBin +
     process.hiEvtAnalyzer +
-    process.jetSequence_reduced +
-    #process.hiPuRhoR3Analyzer + 
+    process.jetSequence +
+    process.hiPuRhoR3Analyzer + 
     process.correctedElectrons +
     process.ggHiNtuplizer +
-    #process.ggHiNtuplizerGED +
-    #process.hiFJRhoAnalyzer +
-    #process.hiFJRhoAnalyzerFinerBins +
-    #process.pfcandAnalyzer +
-    #process.pfcandAnalyzerCS +
-    #process.trackSequencesPP +
+    process.ggHiNtuplizerGED +
+    process.hiFJRhoAnalyzer +
+    process.hiFJRhoAnalyzerFinerBins +
+    process.pfcandAnalyzer +
+    process.pfcandAnalyzerCS +
+    process.trackSequencesPP +
     process.zdcdigi +
     process.QWzdcreco +
     process.rechitanalyzerpp
@@ -311,23 +282,4 @@ if cleanJets == True:
 
 ###############################################################################
 
-# no screen text output
-process.MessageLogger = cms.Service("MessageLogger",
-                          destinations = cms.untracked.vstring('detailedInfo'),
-                          categories = cms.untracked.vstring('eventNumber'),
-                          detailedInfo = cms.untracked.PSet(eventNumber = cms.untracked.PSet(reportEvery = cms.untracked.int32(1000))),
-                          )
-process.options.numberOfThreads=cms.untracked.uint32(8)
-process.options.numberOfStreams=cms.untracked.uint32(0)
-
 # Customization
-#import HLTrigger.HLTfilters.hltHighLevel_cfi
-#process.hltfilter = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
-#process.hltfilter.HLTPaths = ["HLT_HIUPC_DoubleEG2_NotMBHF2AND_v1",]  
-
-#process.superFilterPath = cms.Path(process.hltfilter)
-#process.skimanalysis.superFilters = cms.vstring("superFilterPath")      
-
-#for path in process.paths:
-#    getattr(process,path)._seq = process.hltfilter * getattr(process,path)._seq
-

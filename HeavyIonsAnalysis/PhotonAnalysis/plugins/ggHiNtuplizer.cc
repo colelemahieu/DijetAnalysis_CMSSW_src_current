@@ -104,6 +104,10 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
     evtPlaneTag_ = consumes<reco::EvtPlaneCollection>(ps.getParameter<edm::InputTag>("evtPlane"));
     indexEvtPlane_ = ps.getParameter<int>("indexEvtPlane");
   }
+  
+  // my addition
+  doCaloTower_              = ps.getParameter<bool>("doCaloTower");
+  if (doCaloTower_) CaloTowerCollection_ = consumes<edm::SortedCollection<CaloTower>>(ps.getParameter<edm::InputTag>("recoCaloTower")); 
 
   // initialize output TTree
   edm::Service<TFileService> fs;
@@ -611,6 +615,16 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
     tree_->Branch("muIDTrkHighPt",         &muIDTrkHighPt_);
     tree_->Branch("muIDInTime",            &muIDInTime_);
   }
+
+  if (doCaloTower_){
+    tree_->Branch("nTower",                &nTower_);
+    tree_->Branch("CaloTower_hadE",        &CaloTower_hadE_);
+    tree_->Branch("CaloTower_emE",         &CaloTower_emE_);
+    tree_->Branch("CaloTower_e",           &CaloTower_e_);
+    tree_->Branch("CaloTower_et",          &CaloTower_et_);
+    tree_->Branch("CaloTower_eta",         &CaloTower_eta_);
+    tree_->Branch("CaloTower_phi",         &CaloTower_phi_);
+  }
 }
 
 void ggHiNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es)
@@ -1112,6 +1126,16 @@ void ggHiNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es)
     angEP3pf_.clear();
   }
 
+  if (doCaloTower_){
+    nTower_= 0;
+    CaloTower_hadE_       .clear();
+    CaloTower_emE_        .clear();
+    CaloTower_e_          .clear();
+    CaloTower_et_         .clear();
+    CaloTower_eta_        .clear();
+    CaloTower_phi_        .clear();
+  }
+
   // MC truth
   if (doGenParticles_ && !isData_) {
     fillGenPileupInfo(e);
@@ -1148,6 +1172,7 @@ void ggHiNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es)
   if (doElectrons_) fillElectrons(e, es, pv);
   if (doPhotons_) fillPhotons(e, es, pv);
   if (doMuons_) fillMuons(e, es, pv);
+  if (doCaloTower_) fillCaloTower(e, es, pv);
   if (calcEvtPlanePF_) fillEventPlanesPF(e);
 
   tree_->Fill();
@@ -2226,5 +2251,25 @@ double ggHiNtuplizer::fnc_fourier_v2(double* xx, double* params)
     double res = N0 * (1 + 2*v2*TMath::Cos( 2* reco::deltaPhi(phi, phiEPv2) ));
     return res;
 }
+
+void ggHiNtuplizer::fillCaloTower(const edm::Event& e, const edm::EventSetup& es, reco::Vertex& pv)
+{
+  // Fills tree branches for calo tower 
+
+  edm::Handle<edm::SortedCollection<CaloTower>> CaloTowerHandle;
+  e.getByToken(CaloTowerCollection_, CaloTowerHandle);
+  
+  for (edm::SortedCollection<CaloTower>::const_iterator calo = CaloTowerHandle->begin(); calo != CaloTowerHandle->end(); ++calo) {
+
+       CaloTower_emE_  .push_back(calo->emEnergy());
+       CaloTower_hadE_ .push_back(calo->hadEnergy());
+       CaloTower_e_    .push_back(calo->energy());
+       CaloTower_et_   .push_back(calo->et());
+       CaloTower_phi_  .push_back(calo->phi());
+       CaloTower_eta_  .push_back(calo->eta());
+    
+    nTower_++;
+  }
+} // calo tower loop
 
 DEFINE_FWK_MODULE(ggHiNtuplizer);

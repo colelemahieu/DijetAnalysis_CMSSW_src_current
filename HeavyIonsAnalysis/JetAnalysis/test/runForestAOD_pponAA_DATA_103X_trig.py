@@ -2,6 +2,7 @@
 # Collisions: PbPb
 # Type: Data
 # Input: AOD
+# mem check
 
 cleanJets = True
 
@@ -22,6 +23,14 @@ if version == '':
     version = 'no git info'
 process.HiForest.HiForestVersion = cms.string(version)
 
+
+############################
+# Memory Check
+############################
+#process.SimpleMemoryCheck = cms.Service("SimpleMemoryCheck",
+#    ignoreTotal = cms.untracked.int32(1)
+#)
+
 ###############################################################################
 # Input source
 ###############################################################################
@@ -36,7 +45,7 @@ process.source = cms.Source("PoolSource",
 
 # Number of events we want to process, -1 = all events
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10000)
+    input = cms.untracked.int32(1000)
     )
 
 ###############################################################################
@@ -80,7 +89,7 @@ process.GlobalTag.toGet.extend([
 ###############################################################################
 
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string("HiForestAOD.root"))
+    fileName = cms.string("HiForestAOD_trig.root"))
 
 ###############################################################################
 # Additional Reconstruction and Analysis: Main Body
@@ -185,15 +194,20 @@ process.load('RecoHI.ZDCRecHit.QWZDC2018RecHit_cfi')
 process.load('HeavyIonsAnalysis.JetAnalysis.rechitanalyzer_cfi')
 process.rechitanalyzerpp.doZDCRecHit = True
 process.rechitanalyzerpp.zdcRecHitSrc = cms.InputTag("QWzdcreco")
-process.pfTowerspp.doHF = True
+process.pfTowerspp.doHF = False
 
-process.rechitanalyzerpp.doHF=True
-process.rechitanalyzerpp.hcalHFRecHitSrc = cms.InputTag("reducedHcalRecHits","hfreco")
-process.rechitanalyzerpp.doHBHE=True
-process.rechitanalyzerpp.hcalHBHERecHitSrc = cms.InputTag("reducedHcalRecHits","hbhereco")
-process.rechitanalyzerpp.doEcal=True
-process.rechitanalyzerpp.EBRecHitSrc = cms.InputTag("reducedEcalRecHitsEB")
-process.rechitanalyzerpp.EERecHitSrc = cms.InputTag("reducedEcalRecHitsEE")
+process.rechitanalyzerpp.doHF=False
+#process.rechitanalyzerpp.HFtowerMin = cms.untracked.double(0)
+#process.rechitanalyzerpp.HFTreePtMin = cms.untracked.double(0)
+#process.rechitanalyzerpp.hcalHFRecHitSrc = cms.InputTag("reducedHcalRecHits","hfreco")
+process.rechitanalyzerpp.doHBHE=False
+#process.rechitanalyzerpp.HBHETreePtMin = cms.untracked.double(0)
+#process.rechitanalyzerpp.hcalHBHERecHitSrc = cms.InputTag("reducedHcalRecHits","hbhereco")
+process.rechitanalyzerpp.doEcal=False
+#process.rechitanalyzerpp.EBTreePtMin = cms.untracked.double(0)
+#process.rechitanalyzerpp.EBRecHitSrc = cms.InputTag("reducedEcalRecHitsEB")
+#process.rechitanalyzerpp.EETreePtMin = cms.untracked.double(0)
+#process.rechitanalyzerpp.EERecHitSrc = cms.InputTag("reducedEcalRecHitsEE")
 ###############################################################################
 #Recover peripheral primary vertices
 #https://twiki.cern.ch/twiki/bin/view/CMS/HITracking2018PbPb#Peripheral%20Vertex%20Recovery
@@ -213,8 +227,8 @@ if cleanJets:
 process.jetSequence_reduced = cms.Sequence(
     process.rhoSequence +
     process.highPurityTracks +
-    process.akPu4PFJets +
-    process.akPu4PFJetSequence 
+    process.ak4PFJets +
+    process.ak4PFJetSequence 
 )
 
 process.ana_step = cms.Path(
@@ -230,12 +244,12 @@ process.ana_step = cms.Path(
     #process.hiPuRhoR3Analyzer + 
     process.correctedElectrons +
     process.ggHiNtuplizer +
-    #process.ggHiNtuplizerGED +
+    process.ggHiNtuplizerGED +
     #process.hiFJRhoAnalyzer +
     #process.hiFJRhoAnalyzerFinerBins +
-    #process.pfcandAnalyzer +
+    process.pfcandAnalyzer +
     #process.pfcandAnalyzerCS +
-    #process.trackSequencesPP +
+    process.trackSequencesPP +
     process.zdcdigi +
     process.QWzdcreco +
     process.rechitanalyzerpp
@@ -268,19 +282,19 @@ process.pBeamScrapingFilter = cms.Path(process.beamScrapingFilter)
 process.collisionEventSelectionAOD = cms.Path(process.collisionEventSelectionAOD)
 process.collisionEventSelectionAODv2 = cms.Path(process.collisionEventSelectionAODv2)
 
-process.load('HeavyIonsAnalysis.Configuration.hfCoincFilter_cff')
-process.phfCoincFilter1Th3 = cms.Path(process.hfCoincFilterTh3)
-process.phfCoincFilter2Th3 = cms.Path(process.hfCoincFilter2Th3)
-process.phfCoincFilter3Th3 = cms.Path(process.hfCoincFilter3Th3)
-process.phfCoincFilter4Th3 = cms.Path(process.hfCoincFilter4Th3)
-process.phfCoincFilter5Th3 = cms.Path(process.hfCoincFilter5Th3)
-process.phfCoincFilter1Th4 = cms.Path(process.hfCoincFilterTh4)
-process.phfCoincFilter2Th4 = cms.Path(process.hfCoincFilter2Th4)
-process.phfCoincFilter3Th4 = cms.Path(process.hfCoincFilter3Th4)
-process.phfCoincFilter4Th4 = cms.Path(process.hfCoincFilter4Th4)
-process.phfCoincFilter5Th4 = cms.Path(process.hfCoincFilter5Th4)
-process.phfCoincFilter1Th5 = cms.Path(process.hfCoincFilterTh5)
-process.phfCoincFilter4Th2 = cms.Path(process.hfCoincFilter4Th2)
+#process.load('HeavyIonsAnalysis.Configuration.hfCoincFilter_cff')
+#process.phfCoincFilter1Th3 = cms.Path(process.hfCoincFilterTh3)
+#process.phfCoincFilter2Th3 = cms.Path(process.hfCoincFilter2Th3)
+#process.phfCoincFilter3Th3 = cms.Path(process.hfCoincFilter3Th3)
+#process.phfCoincFilter4Th3 = cms.Path(process.hfCoincFilter4Th3)
+#process.phfCoincFilter5Th3 = cms.Path(process.hfCoincFilter5Th3)
+#process.phfCoincFilter1Th4 = cms.Path(process.hfCoincFilterTh4)
+#process.phfCoincFilter2Th4 = cms.Path(process.hfCoincFilter2Th4)
+#process.phfCoincFilter3Th4 = cms.Path(process.hfCoincFilter3Th4)
+#process.phfCoincFilter4Th4 = cms.Path(process.hfCoincFilter4Th4)
+#process.phfCoincFilter5Th4 = cms.Path(process.hfCoincFilter5Th4)
+#process.phfCoincFilter1Th5 = cms.Path(process.hfCoincFilterTh5)
+#process.phfCoincFilter4Th2 = cms.Path(process.hfCoincFilter4Th2)
 
 process.load("HeavyIonsAnalysis.VertexAnalysis.PAPileUpVertexFilter_cff")
 process.pVertexFilterCutG = cms.Path(process.pileupVertexFilterCutG)
@@ -312,22 +326,22 @@ if cleanJets == True:
 ###############################################################################
 
 # no screen text output
-process.MessageLogger = cms.Service("MessageLogger",
-                          destinations = cms.untracked.vstring('detailedInfo'),
-                          categories = cms.untracked.vstring('eventNumber'),
-                          detailedInfo = cms.untracked.PSet(eventNumber = cms.untracked.PSet(reportEvery = cms.untracked.int32(1000))),
-                          )
+#process.MessageLogger = cms.Service("MessageLogger",
+#                          destinations = cms.untracked.vstring('detailedInfo'),
+#                          categories = cms.untracked.vstring('eventNumber'),
+#                          detailedInfo = cms.untracked.PSet(eventNumber = cms.untracked.PSet(reportEvery = cms.untracked.int32(1000))),
+#                          )
 process.options.numberOfThreads=cms.untracked.uint32(8)
 process.options.numberOfStreams=cms.untracked.uint32(0)
 
 # Customization
-#import HLTrigger.HLTfilters.hltHighLevel_cfi
-#process.hltfilter = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
-#process.hltfilter.HLTPaths = ["HLT_HIUPC_DoubleEG2_NotMBHF2AND_v1",]  
+import HLTrigger.HLTfilters.hltHighLevel_cfi
+process.hltfilter = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
+process.hltfilter.HLTPaths = ["HLT_HIUPC_SingleEG5_NotMBHF2AND_v1"]  
 
-#process.superFilterPath = cms.Path(process.hltfilter)
-#process.skimanalysis.superFilters = cms.vstring("superFilterPath")      
+process.superFilterPath = cms.Path(process.hltfilter)
+process.skimanalysis.superFilters = cms.vstring("superFilterPath")      
 
-#for path in process.paths:
-#    getattr(process,path)._seq = process.hltfilter * getattr(process,path)._seq
+for path in process.paths:
+    getattr(process,path)._seq = process.hltfilter * getattr(process,path)._seq
 
