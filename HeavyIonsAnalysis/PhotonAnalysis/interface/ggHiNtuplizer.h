@@ -51,6 +51,7 @@ class ggHiNtuplizer : public edm::EDAnalyzer {
    void fillElectrons    (const edm::Event&, const edm::EventSetup&, reco::Vertex& pv);
    void fillPhotons      (const edm::Event&, const edm::EventSetup&, reco::Vertex& pv);
    void fillMuons        (const edm::Event&, const edm::EventSetup&, reco::Vertex& pv);
+   void fillCaloTower    (const edm::Event&, const edm::EventSetup&, reco::Vertex& pv);
    void fillEventPlanesPF (const edm::Event&);
 
    // Et and pT sums
@@ -62,6 +63,7 @@ class ggHiNtuplizer : public edm::EDAnalyzer {
    // switches
    bool doGenParticles_;
    bool doElectrons_;
+   bool doCaloTower_;
    bool doPhotons_;
    bool doMuons_;
    bool runOnParticleGun_;
@@ -87,6 +89,7 @@ class ggHiNtuplizer : public edm::EDAnalyzer {
    edm::EDGetTokenT<std::vector<PileupSummaryInfo> >    genPileupCollection_;
    edm::EDGetTokenT<std::vector<reco::GenParticle> >    genParticlesCollection_;
    edm::EDGetTokenT<edm::View<reco::GsfElectron> > gsfElectronsCollection_;
+   edm::EDGetTokenT<edm::SortedCollection<CaloTower>>    CaloTowerCollection_;
    edm::EDGetTokenT<edm::ValueMap<bool> > eleVetoIdMapToken_;
    edm::EDGetTokenT<edm::ValueMap<bool> > eleLooseIdMapToken_;
    edm::EDGetTokenT<edm::ValueMap<bool> > eleMediumIdMapToken_;
@@ -318,6 +321,15 @@ class ggHiNtuplizer : public edm::EDAnalyzer {
    std::vector<int>    eleIDLoose_;
    std::vector<int>    eleIDMedium_;
    std::vector<int>    eleIDTight_;
+
+   // SortedCollection<CaloTower>
+   Int_t nTower_;
+   std::vector<float> CaloTower_hadE_;
+   std::vector<float> CaloTower_emE_;
+   std::vector<float> CaloTower_e_;
+   std::vector<float> CaloTower_et_;
+   std::vector<float> CaloTower_eta_;
+   std::vector<float> CaloTower_phi_;
 
    // reco::Photon
    Int_t          nPho_;
