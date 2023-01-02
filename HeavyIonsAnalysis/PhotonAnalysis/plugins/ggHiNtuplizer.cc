@@ -618,10 +618,14 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
 
   if (doCaloTower_){
     tree_->Branch("nTower",                &nTower_);
-    tree_->Branch("CaloTower_hadE",        &CaloTower_hadE_);
-    tree_->Branch("CaloTower_emE",         &CaloTower_emE_);
+    //tree_->Branch("CaloTower_hadE",        &CaloTower_hadE_);
+    //tree_->Branch("CaloTower_emE",         &CaloTower_emE_);
+    tree_->Branch("heMax",                 &heMax);
+    tree_->Branch("eeMax",                 &eeMax);
+    tree_->Branch("hfmMax",                &hfmMax);
+    tree_->Branch("hfpMax",                &hfpMax);
     tree_->Branch("CaloTower_e",           &CaloTower_e_);
-    tree_->Branch("CaloTower_et",          &CaloTower_et_);
+    //tree_->Branch("CaloTower_et",          &CaloTower_et_);
     tree_->Branch("CaloTower_eta",         &CaloTower_eta_);
     tree_->Branch("CaloTower_phi",         &CaloTower_phi_);
   }
@@ -2259,12 +2263,39 @@ void ggHiNtuplizer::fillCaloTower(const edm::Event& e, const edm::EventSetup& es
   edm::Handle<edm::SortedCollection<CaloTower>> CaloTowerHandle;
   e.getByToken(CaloTowerCollection_, CaloTowerHandle);
   
+  heMax = 0;
+  eeMax = 0;
+  hfmMax = 0;
+  hfpMax = 0;
+
   for (edm::SortedCollection<CaloTower>::const_iterator calo = CaloTowerHandle->begin(); calo != CaloTowerHandle->end(); ++calo) {
 
-       CaloTower_emE_  .push_back(calo->emEnergy());
-       CaloTower_hadE_ .push_back(calo->hadEnergy());
+       if (fabs(calo->eta())>1.3 && fabs(calo->eta())<3.0 && calo->energy()>heMax && calo->emEnergy()==0)
+         {
+           heMax = calo->energy();
+         }
+       if (fabs(calo->eta())>1.48 && fabs(calo->eta())<3.0 && calo->energy()>eeMax && calo->hadEnergy()==0)
+         {
+           eeMax = calo->energy();
+         }
+       if (calo->eta()>-5.2 && calo->eta()<-3.0 && calo->energy()>hfmMax)
+         {
+           hfmMax = calo->energy();
+         }
+       if (calo->eta()>3.0 && calo->eta()<5.2 && calo->energy()>hfpMax)
+         {
+           hfpMax = calo->energy();
+         }
+
+
+  }
+
+  for (edm::SortedCollection<CaloTower>::const_iterator calo = CaloTowerHandle->begin(); calo != CaloTowerHandle->end(); ++calo) {
+
+       //CaloTower_emE_  .push_back(calo->emEnergy());
+       //CaloTower_hadE_ .push_back(calo->hadEnergy());
        CaloTower_e_    .push_back(calo->energy());
-       CaloTower_et_   .push_back(calo->et());
+       //CaloTower_et_   .push_back(calo->et());
        CaloTower_phi_  .push_back(calo->phi());
        CaloTower_eta_  .push_back(calo->eta());
     
